@@ -1,0 +1,25 @@
+[package]
+name = "webservice"
+version = "0.1.0"
+edition = "2021"
+default-run = "teacher-service"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "4"
+actix-rt="2"
+serde = {version = "1.0.132", features = ["derive"]}
+chrono = {version = "0.4.19", features = ["serde"]}
+serde_json = "1.0.105"
+sqlx = { version = "0.7.1", features = ["mysql", "runtime-tokio-rustls", "macros", "chrono",] }
+dotenvy = "0.15.0"
+openssl = {version = "0.10.38", features = ["vendored"]}
+
+[lib]
+name = "webserver"
+path = "./src/lib/lib.rs"
+
+[[bin]]
+name = "teacher-service"
+path = "./src/bin/teacher-service.rs"
+
