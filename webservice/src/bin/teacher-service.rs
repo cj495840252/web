@@ -1,9 +1,12 @@
-use actix_web::{web, App, HttpServer };
+use actix_web::{web, App, HttpServer};
 use std::io;
 use std::sync::Mutex;
 use dotenvy::dotenv;
 use std::env;
+use actix_cors::Cors;
 use sqlx::mysql::MySqlPoolOptions;
+// use actix_cors::Cors;
+
 
 #[path = "../handlers/mod.rs"]
 mod handlers;
@@ -38,6 +41,11 @@ async fn main() -> io::Result<()>{
 
     let app = move || {
         App::new()
+            .wrap(
+                Cors::default()
+                    .supports_credentials()
+                    .allow_any_origin()
+            )
             .app_data(web::Data::new("aa".to_string()))
             .app_data(shared_data.clone())
             .configure(general_routes)

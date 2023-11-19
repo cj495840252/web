@@ -6,7 +6,6 @@ pub fn general_routes(cfg: &mut web::ServiceConfig) {
 }
 
 pub fn course_routes(cfg: &mut web::ServiceConfig){
-
     cfg
         .service(
             web::scope("/courses")
@@ -15,8 +14,6 @@ pub fn course_routes(cfg: &mut web::ServiceConfig){
                 .route("/find", web::get().to(get_courses))
                 .route("/delete", web::delete().to(delete_courses))
                 .route("/update", web::post().to(update_course))
-
-
         );
 }
 // #[derive(Deserialize)]

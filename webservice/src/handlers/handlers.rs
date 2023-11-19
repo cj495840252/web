@@ -63,9 +63,17 @@ pub async fn new_course(
 
     let insert_result = &app_state.db.execute(sql.as_str())
         .await?;
-    Ok(HttpResponse::Ok().json(
+    Ok(HttpResponse::Ok()
+        // .append_header(("Access-Control-Allow-Credentials","true"))
+        // .append_header(("Access-Control-Allow-Origin","*"))
+        // .append_header(("Access-Control-Allow-Methods","POST,OPTIONS"))
+        // // .append_header(("Access-Control-Max-Age",86400))
+        // .append_header(("Access-Control-Allow-Headers","Content-Type"))
+        // .append_header(("access_control_expose_headers","Access-Control-Allow-Origin"))
+        .json(
         "rows affected:".to_string()+insert_result.rows_affected().to_string().as_str()
-    ))
+        )
+    )
 }
 
 pub async fn update_course(
@@ -162,7 +170,9 @@ pub async fn get_courses(app_state: web::Data<AppState>,
         .collect::<Vec<Course>>();
 
     if rows.len() > 0 {
-        Ok(HttpResponse::Ok().json(rows))
+        Ok(HttpResponse::Ok()
+            .append_header(("Access-Control-Allow-Origin","*"))
+            .json(rows))
     }else {
         Err(MyError::NotFound("Not found data in Database".into()))
     }
