@@ -13,30 +13,8 @@ use sqlx::{Column, Executor, MySql, mysql::MySqlPoolOptions, Row, Value, ValueRe
 use sqlx::mysql::MySqlValue;
 use crate::error_handle::MyError;
 
-pub async fn index(req: HttpRequest,d1: web::Data<String>,d2:web::Data<AppState>,
-                   path: web::Path<(String,i32,String)>)
-    -> HttpResponse
-{
-    // println!("{:?}",req);
-    // println!("{:?}",d1);
-    // println!("AppState:{:?}",&d2.visit_count);
-    // let web::Path((val1, val2, val3)) = path;
-    let val1 = &path.into_inner();
-    // let val1 = &path.0
-    // let val2 = &path.1;
-    // let val3 = &path.2;
-    println!("{:?},{:?},{:?}",val1.0,val1.1,val1.2);
-    HttpResponse::Ok().json("success")
-}
 
 
-pub async fn health_check_handler(app_state: web::Data<AppState>) -> HttpResponse {
-    let health_check_response = &app_state.health_check_response;
-    let mut visit_count = app_state.visit_count.lock().unwrap();
-    let response = format!("{} {} times", health_check_response, visit_count);
-    *visit_count += 1;
-    HttpResponse::Ok().json(&response)
-}
 //**使用数据库连接的*****************************************************************************
 pub async fn new_course(
     req: HttpRequest,
@@ -64,12 +42,12 @@ pub async fn new_course(
     let insert_result = &app_state.db.execute(sql.as_str())
         .await?;
     Ok(HttpResponse::Ok()
-        // .append_header(("Access-Control-Allow-Credentials","true"))
-        // .append_header(("Access-Control-Allow-Origin","*"))
-        // .append_header(("Access-Control-Allow-Methods","POST,OPTIONS"))
+        .append_header(("Access-Control-Allow-Credentials","true"))
+        .append_header(("Access-Control-Allow-Origin","*"))
+        .append_header(("Access-Control-Allow-Methods","POST,OPTIONS"))
         // // .append_header(("Access-Control-Max-Age",86400))
-        // .append_header(("Access-Control-Allow-Headers","Content-Type"))
-        // .append_header(("access_control_expose_headers","Access-Control-Allow-Origin"))
+        .append_header(("Access-Control-Allow-Headers","Authorization, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, X-File-Type, Cache-Control, Origin"))
+        .append_header(("access_control_expose_headers","Authorization, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, X-File-Type, Cache-Control, Origin, access-control-allow-origin"))
         .json(
         "rows affected:".to_string()+insert_result.rows_affected().to_string().as_str()
         )
@@ -115,7 +93,9 @@ pub async fn update_course(
 
     let insert_result = &app_state.db.execute(sql.as_str())
         .await?;
-    Ok(HttpResponse::Ok().json(
+    Ok(HttpResponse::Ok()
+        .append_header(("Access-Control-Allow-Origin","*"))
+        .json(
         "rows affected:".to_string()+insert_result.rows_affected().to_string().as_str()
     ))
 }
