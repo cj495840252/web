@@ -2,7 +2,7 @@
 use crate::handlers::handlers::*;
 use actix_web::web;
 use crate::handlers::user::{handle_login, handle_profile};
-use crate::handlers::articles::{handle_channels, handle_create_article};
+use crate::handlers::articles::{handle_channels, handle_create_article, handle_upload};
 
 
 // pub fn general_routes(cfg: &mut web::ServiceConfig) {
@@ -33,9 +33,11 @@ pub fn user_routes(cfg: &mut web::ServiceConfig){
 pub  fn  article_routes(cfg: &mut web::ServiceConfig){
     cfg
         .service(
-            web::scope("/article")
+            web::scope("/articles")
                 .route("/category", web::get().to(handle_channels))
                 .route("/create",web::post().to(handle_create_article))
+                .route("/upload",web::post().to(handle_upload))
+
         );
 }
 // #[derive(Deserialize)]

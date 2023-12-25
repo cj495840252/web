@@ -3,7 +3,10 @@ use std::io;
 // use std::sync::Mutex;
 use dotenvy::dotenv;
 use std::env;
+use std::str::FromStr;
 use actix_cors::Cors;
+use actix_multipart::form::bytes;
+use actix_web::web::Bytes;
 use sqlx::mysql::MySqlPoolOptions;
 // use actix_cors::Cors;
 
@@ -48,13 +51,19 @@ async fn main() -> io::Result<()>{
                     // here is cannot fill out *, or else Error: Custom { kind: Other, error: "can not start server service 0" }
                     .allowed_origin("http://localhost:3000")
                     .allowed_origin("null")
-                    .allowed_methods(vec!["GET", "POST"])
-                    .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT,http::header::ACCESS_CONTROL_ALLOW_ORIGIN])
+                    .allowed_methods(vec!["GET", "POST", "OPTIONS", "PUT"])
+                    .allowed_headers(vec![http::header::AUTHORIZATION,
+                                          http::header::ACCEPT,
+                                          http::header::ACCESS_CONTROL_ALLOW_ORIGIN,
+                                          // 这个header用来结局antd的upload组件的请求
+                                          http::header::HeaderName::from_str("x-requested-with").unwrap()
+                    ])
                     .allowed_header(http::header::CONTENT_TYPE)
                     .max_age(3600)
 
             )
             .app_data(shared_data.clone())
+            .app_data(web::PayloadConfig::default().limit(1_048_576))
             // .configure(general_routes)
             .configure(course_routes)
             .configure(user_routes)

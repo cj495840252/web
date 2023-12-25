@@ -15,6 +15,10 @@ sqlx = { version = "0.7.1", features = ["mysql", "runtime-tokio-rustls", "macros
 dotenvy = "0.15.0"
 openssl = {version = "0.10.38", features = ["vendored"]}
 actix-cors="0.6"
+actix-multipart = "0.6"
+futures-util = "0.3"
+
+
 
 [lib]
 name = "webserver"

@@ -42,12 +42,6 @@ pub async fn new_course(
     let insert_result = &app_state.db.execute(sql.as_str())
         .await?;
     Ok(HttpResponse::Ok()
-        .append_header(("Access-Control-Allow-Credentials","true"))
-        .append_header(("Access-Control-Allow-Origin","*"))
-        .append_header(("Access-Control-Allow-Methods","POST,OPTIONS"))
-        // // .append_header(("Access-Control-Max-Age",86400))
-        .append_header(("Access-Control-Allow-Headers","Authorization, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, X-File-Type, Cache-Control, Origin"))
-        .append_header(("access_control_expose_headers","Authorization, Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, X-File-Type, Cache-Control, Origin, access-control-allow-origin"))
         .json(
         "rows affected:".to_string()+insert_result.rows_affected().to_string().as_str()
         )
