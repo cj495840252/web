@@ -5,8 +5,6 @@ use dotenvy::dotenv;
 use std::env;
 use std::str::FromStr;
 use actix_cors::Cors;
-use actix_multipart::form::bytes;
-use actix_web::web::Bytes;
 use sqlx::mysql::MySqlPoolOptions;
 // use actix_cors::Cors;
 
