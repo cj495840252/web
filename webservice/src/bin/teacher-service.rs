@@ -4,7 +4,9 @@ use std::io;
 use dotenvy::dotenv;
 use std::env;
 use std::str::FromStr;
+use std::sync::Mutex;
 use actix_cors::Cors;
+use actix_web::web::Data;
 use sqlx::mysql::MySqlPoolOptions;
 // use actix_cors::Cors;
 
@@ -26,9 +28,64 @@ mod error_handle;
 
 use crate::routers::routers::*;
 use state::state::AppState;
+use crate::handlers::articles::structs::Article;
 
 #[actix_rt::main]
 async fn main() -> io::Result<()>{
+    let str = r#"
+        [
+            {
+                "id":"8218",
+                "content_count":21,
+                "cover":{
+                    "images":[],
+                    "image_type":2
+                },
+                "status":1,
+                "like_count":0,
+                "publish_date":"2023-12-27 21:05:14",
+                "read_count":2,
+                "title": "Rust入门到再入门",
+                "category": "Rust",
+                "content":"<p>let i = 10;</p>"
+            },
+            {
+                "id":"8219",
+                "content_count":2,
+                "cover":{
+                    "images":[],
+                    "image_type":1
+                },
+                "status":0,
+                "like_count":0,
+                "publish_date":"2023-12-27 21:05:14",
+                "read_count":2,
+                "title": "wkwebview离线加载h5资源结局方案",
+                "category": "前端",
+                "content":"<p>React</p>"
+            },
+            {
+                "id":"8220",
+                "content_count":39,
+                "cover":{
+                    "images":[],
+                    "image_type":0
+                },
+                "status":-1,
+                "like_count":1,
+                "publish_date":"2023-12-27 21:05:14",
+                "read_count":2,
+                "title": "大数据下的裸奔",
+                "category": "大数据",
+                "content":"<p>Spark</p>"
+            }
+        ]
+    "#;
+    let tmp_articles: Vec<Article> = serde_json::from_str(str).unwrap();
+    let articles:Data<Mutex<Vec<Article>>> = web::Data::new( Mutex::new(tmp_articles));
+
+
+
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("URL not define in env");
     let db = MySqlPoolOptions::new()
@@ -61,8 +118,9 @@ async fn main() -> io::Result<()>{
 
             )
             .app_data(shared_data.clone())
-            .app_data(web::PayloadConfig::default().limit(1_048_576))
+            // .app_data(web::PayloadConfig::default().limit(1_048_576))
             // .configure(general_routes)
+            .app_data( articles.clone())
             .configure(course_routes)
             .configure(user_routes)
             .configure(article_routes)

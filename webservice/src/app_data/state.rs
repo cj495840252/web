@@ -9,3 +9,4 @@ pub struct AppState {
     // pub courses: Mutex<Vec<Course>>,
     pub db: MySqlPool,
 }
+

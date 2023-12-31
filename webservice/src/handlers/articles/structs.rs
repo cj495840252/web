@@ -8,20 +8,9 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 
-#[derive(Debug,Deserialize,Serialize)]
+#[derive(Debug,Deserialize,Serialize,Clone)]
 pub struct Article{
-    //                 "id":"8218",
-    //                 "content_count":21,
-    //                 "cover":{
-    //                     "images":[]
-    //                 },
-    //                 "status":1,
-    //                 "like_count":0,
-    //                 "publish_date":"2023-12-27 21:05:14",
-    //                 "read_count":2,
-    //                 "title": "Rust入门到再入门"
-
-    id: Option<String>,
+    pub id: Option<String>,
     title: String,
     content_count: Option<u32>,
     like_count: Option<u32>,

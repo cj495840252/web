@@ -8,6 +8,7 @@ use sqlx::error::Error as SQLxError;
 use serde::Serialize;
 use std::fmt;
 use std::fmt::Formatter;
+use actix_multipart::MultipartError;
 use actix_web::{error, Error, http::StatusCode, HttpResponse, Result};
 use actix_web::body::BoxBody;
 
@@ -69,5 +70,12 @@ impl From<actix_web::error::Error> for MyError {
 impl From<SQLxError> for MyError {
     fn from(value: SQLxError) -> Self {
         MyError::DBError(value.to_string())
+    }
+}
+
+
+impl From<MultipartError> for MyError {
+    fn from(value: MultipartError) -> Self {
+        MyError::ActixError(value.to_string())
     }
 }
