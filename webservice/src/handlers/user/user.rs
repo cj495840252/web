@@ -4,7 +4,10 @@ use std::collections::HashMap;
 use actix_web::{HttpRequest, HttpResponse, web};
 use actix_web::http::header::HeaderValue;
 use actix_web::http::StatusCode;
+use sqlx::{Error, Executor};
+use crate::error_handle::MyError;
 use crate::state::state::AppState;
+use crate::models::user::User;
 
 pub async fn handle_login(request: HttpRequest, data: web::Json<HashMap<String,String>>, share_data:web::Data<AppState>)
 -> HttpResponse
@@ -39,11 +42,25 @@ pub async fn handle_profile(request: HttpRequest,
 
 }
 
-// pub async fn handle_profile(request: HttpRequest,
-//                             share_data:web::Data<AppState>)
-//                             -> HttpResponse
-// {
-//
-//     println!("{:?}", request.headers());
-//     HttpResponse::Ok().json("Request success")
-// }
+
+
+
+
+
+
+
+pub async fn get_user_info(request: HttpRequest, share_data:web::Data<AppState>)
+-> Result<HttpResponse,MyError> {
+    let user = sqlx::query!("select * from user.user")
+        .fetch_one(&share_data.db).await
+        .map(|row| {
+            User {
+                username: row.username.ok_or_else(||Error::RowNotFound).expect("user表没有username"),
+                portrait: row.portrait.ok_or_else(||Error::RowNotFound).expect("user表没有portrait")
+            }
+        })
+        .map_err(|_e|MyError::NotFound("Not find user data".into()))?;
+
+
+    Ok(HttpResponse::Ok().json(user))
+}

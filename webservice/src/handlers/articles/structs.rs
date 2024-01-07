@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::future::Future;
+use std::ops::Deref;
 use std::pin::Pin;
 use actix_multipart::{Field, Multipart};
 use actix_web::{FromRequest, HttpRequest, web};
@@ -24,9 +25,12 @@ pub struct Article{
 
 impl From<web::Json<Article>> for  Article {
     fn from(value: Json<Article>) -> Self {
-        let id = Uuid::new_v4();
+        let id = match &value.id {
+            None => { Uuid::new_v4().to_string() }
+            Some( id) => { id.to_string() }
+        };
         Article{
-            id: Some(id.to_string()),
+            id: Some(id),
             title: value.title.to_owned(),
             content_count: Some(value.content_count.unwrap_or(0)),
             like_count: Some(value.like_count.unwrap_or(0)),

@@ -1,5 +1,5 @@
 use actix_web::{web, App, HttpServer, http};
-use std::io;
+use std::{io};
 // use std::sync::Mutex;
 use dotenvy::dotenv;
 use std::env;
@@ -8,7 +8,7 @@ use std::sync::Mutex;
 use actix_cors::Cors;
 use actix_web::web::Data;
 use sqlx::mysql::MySqlPoolOptions;
-// use actix_cors::Cors;
+// use actix_files as fs;
 
 
 #[path = "../handlers/mod.rs"]
@@ -38,8 +38,8 @@ async fn main() -> io::Result<()>{
                 "id":"8218",
                 "content_count":21,
                 "cover":{
-                    "images":[],
-                    "image_type":2
+                    "images":["http://localhost:3001/static/1F600.png"],
+                    "image_type":3
                 },
                 "status":1,
                 "like_count":0,
@@ -84,8 +84,6 @@ async fn main() -> io::Result<()>{
     let tmp_articles: Vec<Article> = serde_json::from_str(str).unwrap();
     let articles:Data<Mutex<Vec<Article>>> = web::Data::new( Mutex::new(tmp_articles));
 
-
-
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("URL not define in env");
     let db = MySqlPoolOptions::new()
@@ -115,15 +113,16 @@ async fn main() -> io::Result<()>{
                     ])
                     .allowed_header(http::header::CONTENT_TYPE)
                     .max_age(3600)
-
             )
             .app_data(shared_data.clone())
+            .service( actix_files::Files::new("static", "static").show_files_listing())
+
             // .app_data(web::PayloadConfig::default().limit(1_048_576))
-            // .configure(general_routes)
             .app_data( articles.clone())
             .configure(course_routes)
             .configure(user_routes)
             .configure(article_routes)
+
     };
 
     HttpServer::new(app).bind("127.0.0.1:3001")?.run().await

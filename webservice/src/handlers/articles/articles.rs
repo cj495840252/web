@@ -6,6 +6,7 @@ use std::fmt::format;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use std::ops::Deref;
 use std::path::Path;
 use std::sync::Mutex;
 use actix_multipart::form::{bytes, FieldReader};
@@ -13,8 +14,9 @@ use actix_web::{HttpRequest, HttpResponse, web};
 use crate::state::state::AppState;
 use actix_multipart::{Field, Multipart};
 use actix_web::http::header::ContentLength;
-use futures_util::StreamExt as _;
+use futures_util::{FutureExt, StreamExt as _};
 use serde_json::to_string;
+use sqlx::{Executor, query_as, Row};
 use crate::error_handle::MyError;
 use crate::handlers::articles;
 use crate::handlers::articles::structs::Article;
@@ -59,7 +61,7 @@ pub async fn handle_upload(mut payload: Multipart)
         files.push(file_name.to_owned());
 
     }
-    files = files.iter_mut().map(|x|"public/".to_string()+x).collect::<Vec<String>>();
+    files = files.iter_mut().map(|x|"http://localhost:3001/static/".to_string()+x).collect::<Vec<String>>();
     let mut result = HashMap::new();
 
     result.insert("data",files);
@@ -72,17 +74,14 @@ pub async fn handle_get_list(request: HttpRequest,
                              params: web::Query<HashMap<String,String>>,
                              mut articles:web::Data<Mutex<Vec<Article>>>)
 -> HttpResponse{
-    // println!("{:?}",params);//  根据参数去筛选数据
-    // println!("{:?}",serde_json::to_string();
-    // let a = &articles.lock().unwrap();
-    // let mut s = String::from("{ \"data\": ");
-    // s.push_str(&serde_json::to_string(&articles.lock().unwrap().as_slice()).unwrap());
-    // s.push_str("}");
-    println!("{:?}", articles.lock().unwrap().len());
+    println!("{:?}",params);//  根据参数去筛选数据
+
     let mut res = HashMap::new();
     res.insert("data", articles.lock().unwrap().clone());
     return HttpResponse::Ok().json(res) ;
 }
+
+
 pub async fn handle_delete_article(request: HttpRequest,
                              params: web::Path<String>,
                              mut articles:web::Data<Mutex<Vec<Article>>>)
@@ -103,3 +102,72 @@ pub async fn handle_delete_article(request: HttpRequest,
     return HttpResponse::Ok().json("没有该数据") ;
 
 }
+
+pub async fn handle_get_detail(request: HttpRequest,
+                             params: web::Path<String>,
+                             mut articles:web::Data<Mutex<Vec<Article>>>)
+-> HttpResponse {
+    println!("{:?}", params);//  根据参数去筛选数据
+
+
+    let return_articles = articles.lock().unwrap();
+    let mut article1 = None;
+    for (index, article) in return_articles.iter().enumerate() {
+        if article.id.as_ref().unwrap().deref() == params.parse::<String>().unwrap(){
+             article1 = Some(return_articles[index].clone());
+        }
+    }
+
+    HttpResponse::Ok().json(article1)
+    // HttpResponse::Ok().json("")
+}
+
+
+pub async  fn handle_update_article(request: HttpRequest
+                                    , new_article: web::Json<structs::Article>
+                                    , _shared_data:web::Data<AppState>,
+                                    mut articles:  web::Data<Mutex<Vec<Article>>>
+)
+                                    -> HttpResponse{
+    println!("PUT /articles/update");
+    let new_article1 = Article::from(new_article);
+    println!("{:?}",new_article1);
+
+    for (index,article) in articles.lock().unwrap().iter_mut().enumerate() {
+        println!("{:?}",index);
+        if article.id.as_ref().unwrap() == new_article1.id.as_ref().unwrap() {
+            // articles.lock().unwrap()[index] = new_article1.to_owned();
+            *article = new_article1.to_owned()
+        }
+    }
+    println!("{:?}",articles);
+    return HttpResponse::Ok().json(r#"文章更新成功"#);
+
+}
+
+
+pub async fn get_sidebar_data(request: HttpRequest, category: web::Path<i32>,shared_data:web::Data<AppState>
+)
+-> Result<HttpResponse, MyError> {
+    let category = category.into_inner();
+    let query = format!(r#"
+        with t as (
+            select  i1.`key`,i1.label, i2.children,i1.category from articles.items i1 join (
+                select category,
+                    `parent`,JSON_ARRAYAGG(json_object('key', `key`,'label', label
+                    ))as children
+                from articles.items where level=2 group by category,`parent`
+            ) i2 on i1.`key` = i2.parent
+        )
+        select JSON_ARRAYAGG(JSON_OBJECT('key',`key`,'label', label, 'children',children)) as data
+        from t where category={}
+        "#,category);
+
+    let data = sqlx::query(&*query).fetch_one(&shared_data.db).await?;
+    let items: serde_json::Value = data.try_get("data")?;
+    let mut res = HashMap::new();
+    res.insert("data",items);
+    Ok(HttpResponse::Ok().json(res))
+}
+
+

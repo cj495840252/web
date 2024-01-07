@@ -1,2 +1,6 @@
+
+
 [workspace]
-members = ["webservice",'db']
+members = ["webservice"]
+resolver = "2" # 这个的意思是指定rust的版本为2021
+
